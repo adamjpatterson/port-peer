@@ -1,12 +1,13 @@
 {
   "name": "test",
   "version": "1.0.0",
-  "description": "",
+  "description": "Port peer test suite.",
   "main": "./dist/index.js",
   "scripts": {
     "build": "tsc --build .",
     "clean": "rm -rf ./dist/*",
     "start": "node .",
+    "test": "npm run clean:build && node --expose-gc .",
     "monitor": "nodemon .",
     "clean:build": "npm run clean && npm run build",
     "clean:build:start": "npm run clean:build && npm start"
@@ -18,7 +19,15 @@
   },
   "type": "module",
   "devDependencies": {
+    "@eslint/js": "^9.37.0",
+    "@stylistic/eslint-plugin": "^5.4.0",
     "@types/node": "^20.6.2",
-    "typescript": "^5.1.6"
-  }
+    "eslint": "^9.38.0",
+    "globals": "^16.4.0",
+    "nodemon": "^3.1.9",
+    "prettier": "^3.6.2",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.46.1"
+  },
+  "private": true
 }
