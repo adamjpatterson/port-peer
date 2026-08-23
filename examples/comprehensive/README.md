@@ -126,7 +126,7 @@ if (isMainThread) {
 #### Clone the repository.
 
 ```bash
-git clone https://github.com/far-analytics/port-peer.git
+git clone https://github.com/adamjpatterson/port-peer.git
 ```
 
 #### Change directory into the relevant example directory.
