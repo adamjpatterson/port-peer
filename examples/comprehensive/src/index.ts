@@ -1,9 +1,7 @@
-/* eslint-disable no-inner-declarations */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Worker, isMainThread, parentPort, threadId } from "node:worker_threads";
 import { fileURLToPath } from "node:url";
 import { strict as assert } from "node:assert";
-import { Peer } from "port-peer";
+import { Peer } from "@far-analytics/port-peer";
 
 if (isMainThread) {
   // This is the main thread.
@@ -11,9 +9,9 @@ if (isMainThread) {
     const worker = new Worker(fileURLToPath(import.meta.url)); // (1)
     const peer = new Peer(worker); // (2)
 
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
     worker.on(
       "online",
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
       /*(4)*/ async () => {
         try {
           const greeting = await peer.call<string>("hello_world", "again, another"); // (9)
@@ -39,9 +37,9 @@ if (isMainThread) {
             }
 
             // The worker thread is terminated; however, the call to the `very_late_binding` function in the worker thread is still outstanding.
-            peer.register("very_late_binding", (value: number): void =>
-              console.log(`The worker's thread Id was ${value}.`)
-            ); // (17)
+            peer.register("very_late_binding", (value: number): void => {
+              console.log(`The worker's thread Id was ${value.toString()}.`);
+            }); // (17)
           }, 4);
         }
       }
@@ -77,7 +75,7 @@ if (isMainThread) {
       // This will throw in the main thread.
       peer.register("a_reasonable_assertion", callAFunction); // (7).
 
-      await peer.call<void>("very_late_binding", threadId); // (8)
+      await peer.call("very_late_binding", threadId); // (8)
     } catch (err) {
       console.error(err);
     }

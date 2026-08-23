@@ -1,6 +1,6 @@
 import { Worker, isMainThread, parentPort } from "node:worker_threads";
 import { fileURLToPath } from "node:url";
-import { Peer } from "port-peer";
+import { Peer } from "@far-analytics/port-peer";
 
 if (isMainThread) {
   // This is the main thread.
