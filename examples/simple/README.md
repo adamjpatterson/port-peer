@@ -82,7 +82,7 @@ cd port-peer/examples/simple
 #### Install the example dependencies.
 
 ```bash
-npm install && npm update
+npm install
 ```
 
 #### Run the application.

@@ -138,7 +138,7 @@ cd port-peer/examples/comprehensive
 #### Install the example dependencies.
 
 ```bash
-npm install && npm update
+npm install
 ```
 
 #### Build the TypeScript application.
