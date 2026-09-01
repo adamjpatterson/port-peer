@@ -46,9 +46,16 @@ export class PortPeer {
     this.callableRegistrar = new Map<string, (...args: any[]) => any>();
 
     if (port instanceof threads.Worker) {
+      this.portOnline = new Promise<void>((resolve, reject) => {
+        this.port.once("online", resolve);
+        this.port.once("error", reject);
+        this.port.once("exit", reject);
+      });
+      this.portOnline.catch(() => {});
+
       this.port.once("error", (err: Error) => {
-        this.portOnline = Promise.reject<Error>(err);
-        this.portOnline.catch<Error>((reason: Error) => reason);
+        this.portOnline = Promise.reject(err);
+        void this.portOnline.catch(() => {});
         for (const [index, call] of this.callRegistrar.entries()) {
           this.callRegistrar.delete(index);
           call.j(err);
@@ -56,19 +63,12 @@ export class PortPeer {
       });
 
       this.port.once("exit", (exitCode: number) => {
-        this.portOnline = Promise.reject<Error>(exitCode);
-        this.portOnline.catch<number>((reason: number) => reason);
+        this.portOnline = Promise.reject(exitCode);
+        void this.portOnline.catch(() => {});
         for (const [index, call] of this.callRegistrar.entries()) {
           this.callRegistrar.delete(index);
           call.j(exitCode);
         }
-      });
-
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      this.portOnline = new Promise<void>((r, j) => {
-        this.port.once("online", () => {
-          r();
-        });
       });
     }
 
@@ -116,7 +116,7 @@ export class PortPeer {
       await new Promise<null>((r, j) => {
         this.port.once("messageerror", j);
         if (err instanceof Error) {
-          const error: Record<string, unknown> = {};
+          const error: Record<string, unknown> = { name: err.name };
           for (const name of Object.getOwnPropertyNames(err)) {
             error[name] = (err as unknown as Record<string, unknown>)[name];
           }
