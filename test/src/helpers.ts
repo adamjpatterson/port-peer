@@ -7,8 +7,8 @@ export interface TestPeer {
   peer: Peer;
 }
 
-export const createTestPeer = (): TestPeer => {
-  const worker = new Worker(fileURLToPath(new URL("./worker.js", import.meta.url)));
+export const createTestPeer = (workerFile = "worker.js"): TestPeer => {
+  const worker = new Worker(fileURLToPath(new URL(`./${workerFile}`, import.meta.url)));
   return { worker, peer: new Peer(worker) };
 };
 
@@ -32,4 +32,19 @@ export const withTimeout = async <T>(promise: Promise<T>, message: string, milli
   } finally {
     clearTimeout(timeout);
   }
+};
+
+export const assertTimesOut = async (promise: Promise<unknown>, message: string): Promise<void> => {
+  void promise.catch(() => {});
+  await withTimeout(
+    promise.then(() => {
+      throw new Error(`Expected timeout: ${message}`);
+    }),
+    message,
+    250
+  ).catch((error: unknown) => {
+    if (!(error instanceof Error) || error.message !== message) {
+      throw error;
+    }
+  });
 };

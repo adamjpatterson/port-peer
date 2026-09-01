@@ -24,4 +24,16 @@ await suite("Peer (basic calls)", async () => {
       await closeTestPeer(testPeer);
     }
   });
+
+  await test("marshals structured-clone values and multiple arguments.", async () => {
+    const testPeer = createTestPeer();
+    try {
+      const value = { nested: [1, "two", null], flag: true };
+      assert.deepStrictEqual(await testPeer.peer.call("echo", value), value);
+      const buffer = await testPeer.peer.call<Uint8Array>("echo", Buffer.from([1, 2, 3]));
+      assert.deepStrictEqual([...buffer], [1, 2, 3]);
+    } finally {
+      await closeTestPeer(testPeer);
+    }
+  });
 });

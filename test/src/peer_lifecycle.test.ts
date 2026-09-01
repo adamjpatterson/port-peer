@@ -14,10 +14,29 @@ await suite("Peer (lifecycle)", async () => {
     });
   });
 
+  await test("rejects all pending calls when the worker exits.", async () => {
+    const testPeer = createTestPeer();
+    await testPeer.peer.call("echo", "ready");
+    const pending = Array.from({ length: 10 }, () => testPeer.peer.call("delay", 10_000));
+    await new Promise<void>((resolve) => setImmediate(resolve));
+    await testPeer.worker.terminate();
+
+    const results = await Promise.allSettled(pending);
+    assert.ok(results.every((result) => result.status === "rejected" && typeof result.reason === "number"));
+  });
+
   await test("rejects calls made after worker termination.", async () => {
     const testPeer = createTestPeer();
     await testPeer.worker.terminate();
     await assert.rejects(testPeer.peer.call("echo", "after-exit"), (reason: unknown) => typeof reason === "number");
-    await closeTestPeer(testPeer);
+  });
+
+  await test("rejects a call when the worker fails during startup.", async () => {
+    const testPeer = createTestPeer("startup_failure.js");
+    try {
+      await assert.rejects(testPeer.peer.call("echo", "startup"), { message: "worker startup failure" });
+    } finally {
+      await closeTestPeer(testPeer);
+    }
   });
 });

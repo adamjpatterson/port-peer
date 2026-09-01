@@ -7,7 +7,10 @@ await suite("Peer (concurrent)", async () => {
     const testPeer = createTestPeer();
     try {
       const calls = Array.from({ length: 100 }, (_, index) => testPeer.peer.call<number>("add", index, 1));
-      assert.deepStrictEqual(await Promise.all(calls), Array.from({ length: 100 }, (_, index) => index + 1));
+      assert.deepStrictEqual(
+        await Promise.all(calls),
+        Array.from({ length: 100 }, (_, index) => index + 1)
+      );
     } finally {
       await closeTestPeer(testPeer);
     }
@@ -20,7 +23,10 @@ await suite("Peer (concurrent)", async () => {
       for (let index = 0; index < 25; index++) {
         results.push(await testPeer.peer.call<number>("add", index, 0));
       }
-      assert.deepStrictEqual(results, Array.from({ length: 25 }, (_, index) => index));
+      assert.deepStrictEqual(
+        results,
+        Array.from({ length: 25 }, (_, index) => index)
+      );
     } finally {
       await closeTestPeer(testPeer);
     }
