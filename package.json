@@ -43,16 +43,16 @@
   "homepage": "https://github.com/adamjpatterson/port-peer#readme",
   "devDependencies": {
     "@eslint/js": "^9.37.0",
-    "@stylistic/eslint-plugin": "^5.4.0",
-    "@types/node": "^20.11.28",
+    "@stylistic/eslint-plugin": "^5.10.0",
+    "@types/node": "^20.19.43",
     "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@typescript-eslint/parser": "^8.46.2",
-    "eslint": "^9.38.0",
-    "globals": "^16.4.0",
-    "nodemon": "^3.1.9",
-    "prettier": "^3.6.2",
+    "eslint": "^9.39.5",
+    "globals": "^16.5.0",
+    "nodemon": "^3.1.14",
+    "prettier": "^3.9.6",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.46.1"
+    "typescript-eslint": "^8.69.0"
   },
   "keywords": [
     "api",
