@@ -9,7 +9,7 @@ Port Peer provides a simple and intuitive interface that makes inter-thread func
 ### Features
 
 - Bi-directional inter-thread function calls.
-- Port Peer will marshal the return value or `Error` from the _other_ thread back to the caller.
+- Port Peer will marshal the return value or failure reason from the _other_ thread back to the caller.
 - The _other_ thread may be the main thread or a worker thread.
 - Registered functions (i.e., `peer.register`) persist until deregistered (i.e., `peer.deregister`) .
 - Late binding registrants will be called with previously awaited invocations.
@@ -29,7 +29,7 @@ Port Peer provides a simple and intuitive interface that makes inter-thread func
 ## Installation
 
 ```bash
-npm install port-peer --save
+npm install @far-analytics/port-peer --save
 ```
 
 ## Concepts
@@ -38,7 +38,7 @@ npm install port-peer --save
 
 An instance of a `Peer` facilitates bi-directional communication between threads. The `Peer` can be used in order to register a function in one thread and call it from another thread. Calls may be made from the main thread to a worker thread, and conversely from a worker thread to the main thread.
 
-Late binding registrants will be called with previously awaited invocations; thus preventing a race condition. This means that you may await a call to a function that has not yet been registered. Once the function is registered in the _other_ thread it will be called and its return value or `Error` will be marshalled back to the caller.
+Late binding registrants will be called with previously awaited invocations; thus preventing a race condition. This means that you may await a call to a function that has not yet been registered. Once the function is registered in the _other_ thread it will be called and its return value or failure reason will be marshalled back to the caller.
 
 Please see the [Examples](#examples) for variations on the `Peer`'s usage.
 
@@ -51,7 +51,7 @@ Please see the [Examples](#examples) for variations on the `Peer`'s usage.
 ```ts
 import { Worker, parentPort } from "node:worker_threads";
 import { fileURLToPath } from "node:url";
-import { Peer } from "port-peer";
+import { Peer } from "@far-analytics/port-peer";
 ```
 
 #### You can create a new Peer by passing a MessagePort or Worker instance to the Peer constructor.
@@ -114,11 +114,17 @@ Returns: `<Promise<T>>`
 - If the registered function in the _other_ thread throws or rejects, the failure reason will be marshalled back from the _other_ thread to _this_ thread and the `Promise` will reject with that value as its failure reason.
 - Rejection reasons may be any value supported by the underlying `MessagePort` structured-clone operation, including `Error` objects, strings, numbers, `false`, `null`, and `undefined`. Callers should not assume that a rejection reason is an `Error`.
 - When an `Error` is marshalled, its standard error information is transferred according to the platform's structured-clone behavior. Error identity, custom prototypes, and custom properties are not guaranteed to be preserved.
+- If a failure reason cannot be structured-cloned, `peer.call()` will reject with the cloning error raised while sending the result.
 
 ###### Worker lifecycle
 
-- If a worker thread throws an unhandled exception while a call is awaited, the `Error` will be marshalled back from the _other_ thread to _this_ thread and the `Promise` will reject with the unhandled exception as its failure reason.
+- If a worker thread throws an unhandled exception while a call is awaited, the `Promise` will reject with the worker error.
 - If a worker exits while a call is awaited, the `Promise` will reject with the worker's exit code as its failure reason.
+
+###### MessagePort lifecycle
+
+- If a `MessagePort` closes while a call is awaited, the `Promise` will reject with an error indicating that the port closed.
+- Calls made after the `MessagePort` closes will reject with the same error.
 
 _public_ **peer.register(name, fn)**
 
@@ -135,7 +141,7 @@ Returns: `<void>`
 
 ## Versioning
 
-The Port Peer package adheres to semantic versioning. Breaking changes to the public API will result in a turn of the major. Minor and patch changes will always be backward compatible.
+The Port Peer package adheres to semantic versioning. Breaking changes to the public API will result in a bump of the major version. Minor and patch changes will always be backward compatible.
 
 Excerpted from [Semantic Versioning 2.0.0](https://semver.org/):
 
