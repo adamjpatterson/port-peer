@@ -5,7 +5,7 @@ import { CallMessage, ResultMessage } from "./messages.js";
 
 export interface CallOptions<T> {
   id: number;
-  name: string;
+  fn: string;
   r: (value: T) => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   j: (reason?: any) => void;
@@ -13,14 +13,14 @@ export interface CallOptions<T> {
 
 export class Call<T> {
   public id: number;
-  public name: string;
+  public fn: string;
   public r: (value: T) => void;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public j: (reason?: any) => void;
 
-  constructor({ id, name, r, j }: CallOptions<T>) {
+  constructor({ id, fn, r, j }: CallOptions<T>) {
     this.id = id;
-    this.name = name;
+    this.fn = fn;
     this.r = r;
     this.j = j;
   }
@@ -73,28 +73,24 @@ export class PortPeer {
     }
 
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    this.port.on("message", async (message: CallMessage & ResultMessage) => {
-      if (message.type == "CallMessage") {
-        const fn = this.callableRegistrar.get(message.name);
-        if (fn) {
+    this.port.on("message", async (message: CallMessage | ResultMessage) => {
+      if (message.type == "call") {
+        const func = this.callableRegistrar.get(message.fn);
+        if (func) {
           try {
-            await this.tryPost(fn, message);
+            await this.tryPost(func, message);
           } catch (err) {
             console.error(err);
           }
         } else {
           this.cachedCallMessages.add(message);
         }
-      } else if (message.type == "ResultMessage") {
+      } else {
         const call = this.callRegistrar.get(message.id);
         this.callRegistrar.delete(message.id);
         if (call) {
-          if (message.error) {
-            const error: Record<string, unknown> = new Error() as unknown as Record<string, unknown>;
-            for (const [key, value] of Object.entries<unknown>(message.error)) {
-              error[key] = value;
-            }
-            call.j(error);
+          if (!message.ok) {
+            call.j(message.error);
           } else {
             call.r(message.value);
           }
@@ -103,51 +99,47 @@ export class PortPeer {
     });
   }
 
-  protected async tryPost(fn: (...args: unknown[]) => unknown, message: CallMessage): Promise<void> {
+  protected async tryPost(func: (...args: unknown[]) => unknown, message: CallMessage): Promise<void> {
     try {
-      const value = await fn(...message.args);
+      const value = await func(...message.args);
       await new Promise<null>((r, j) => {
         this.port.once("messageerror", j);
-        this.port.postMessage(new ResultMessage({ id: message.id, value }));
+        this.port.postMessage(new ResultMessage({ id: message.id, value, ok: true }));
         this.port.removeListener("messageerror", j);
         r(null);
       });
-    } catch (err) {
+    } catch (error) {
       await new Promise<null>((r, j) => {
         this.port.once("messageerror", j);
-        if (err instanceof Error) {
-          const error: Record<string, unknown> = { name: err.name };
-          for (const name of Object.getOwnPropertyNames(err)) {
-            error[name] = (err as unknown as Record<string, unknown>)[name];
-          }
-          this.port.postMessage(new ResultMessage({ id: message.id, error }));
-        }
+        const errorToSend = typeof error == "function" || typeof error == "symbol" ? String(error) : error;
+
+        this.port.postMessage(new ResultMessage({ id: message.id, error: errorToSend, ok: false }));
         this.port.removeListener("messageerror", j);
         r(null);
       });
     }
   }
 
-  public async call<T>(name: string, ...args: unknown[]): Promise<T> {
+  public async call<T>(fn: string, ...args: unknown[]): Promise<T> {
     await this.portOnline;
     // Each call must await here, until the port comes online, in order to ensure previous calls are processed prior to this one.
 
     return new Promise<T>((r, j) => {
       const id = this.callID++;
-      this.callRegistrar.set(id, new Call<T>({ id, name, r, j }));
+      this.callRegistrar.set(id, new Call<T>({ id, fn, r, j }));
       this.port.once("messageerror", j);
-      this.port.postMessage(new CallMessage({ id, name, args }));
+      this.port.postMessage(new CallMessage({ id, fn, args }));
       this.port.removeListener("messageerror", j);
     });
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public register(name: string, fn: (...args: any[]) => any): void {
-    this.callableRegistrar.set(name, fn);
+  public register(name: string, func: (...args: any[]) => any): void {
+    this.callableRegistrar.set(name, func);
     for (const cachedCallMessage of [...this.cachedCallMessages]) {
-      if (cachedCallMessage.name === name) {
+      if (cachedCallMessage.fn === name) {
         this.cachedCallMessages.delete(cachedCallMessage);
-        this.tryPost(fn, cachedCallMessage).catch((err: Error) => {
+        this.tryPost(func, cachedCallMessage).catch((err: Error) => {
           console.error(err);
         });
       }

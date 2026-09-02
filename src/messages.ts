@@ -1,39 +1,47 @@
 export interface CallMessageOptions {
   id: number;
-  name: string;
+  fn: string;
   args: unknown[];
 }
 
 export class CallMessage {
-  public type: string;
+  public type: "call";
   public id: number;
-  public name: string;
+  public fn: string;
   public args: unknown[];
 
-  constructor({ id, name, args }: CallMessageOptions) {
-    this.type = "CallMessage";
+  constructor({ id, fn, args }: CallMessageOptions) {
+    this.type = "call";
     this.id = id;
-    this.name = name;
+    this.fn = fn;
     this.args = args;
   }
 }
 
-export interface ResultMessageOptions {
-  id: number;
-  value?: unknown;
-  error?: Record<string, unknown>;
-}
+export type ResultMessageOptions =
+  | {
+      id: number;
+      ok: true;
+      value: unknown;
+    }
+  | {
+      id: number;
+      ok: false;
+      error: unknown;
+    };
 
 export class ResultMessage {
-  public type: string;
+  public type: "result";
   public id: number;
+  public ok: boolean;
   public value?: unknown;
-  public error?: Record<string, unknown>;
+  public error?: unknown;
 
-  constructor({ id, value, error }: ResultMessageOptions) {
-    this.type = "ResultMessage";
-    this.id = id;
-    this.value = value;
-    this.error = error;
+  constructor(options: ResultMessageOptions) {
+    this.type = "result";
+    this.ok = options.ok;
+    this.id = options.id;
+    this.value = options.ok ? options.value : undefined;
+    this.error = options.ok ? undefined : options.error;
   }
 }
