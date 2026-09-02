@@ -23,8 +23,8 @@ This example provides a comprehensive demonstration of Port Peer's functionality
 10. Resolve (3) and log the return value.
 11. Resolve (8) and log the return value.
 12. Use the `Peer` to call the function registered as `a_reasonable_assertion` and await resolution.
-13. Resolve (12) and catch the Error and log the stack trace in the main thread.
-    - The Error was marshalled from the Error produced by the reasonable assertion that was made in the `nowThrowAnError` function in the worker thread.
+13. Resolve (12) and catch the failure reason and log it in the main thread.
+    - In this example, the failure reason is an `Error` produced by the reasonable assertion made in the `nowThrowAnError` function in the worker thread.
 14. Terminate the worker thread asynchronously.
 15. Await abends.
 16. The worker thread exited; hence, log the exit code.
@@ -39,7 +39,7 @@ Please see the comments in the code that specify each of the steps above. The ou
 import { Worker, isMainThread, parentPort, threadId } from "node:worker_threads";
 import { fileURLToPath } from "node:url";
 import { strict as assert } from "node:assert";
-import { Peer } from "port-peer";
+import { Peer } from "@far-analytics/port-peer";
 
 if (isMainThread) {
   // This is the main thread.
@@ -153,24 +153,13 @@ npm run clean:build
 npm start
 ```
 
-##### Output
+##### Output (stack trace abbreviated)
 
 ```bash
 Hello, another world!
 Hello, again, another world!
 Now, back in the Main Thread, we will handle the AssertionError [ERR_ASSERTION]: To err is Human.
-    at nowThrowAnError (file:///port-peer/test/dist/index.js:31:16)
-    at callAFunction (file:///port-peer/test/dist/index.js:34:9)
-    at Peer.tryPost (/port-peer/dist/index.js:92:33)
-    at MessagePort.<anonymous> (/port-peer/dist/index.js:62:36)
-    at [nodejs.internal.kHybridDispatch] (node:internal/event_target:762:20)
-    at exports.emitMessage (node:internal/per_context/messageport:23:28) {
-  generatedMessage: false,
-  code: 'ERR_ASSERTION',
-  actual: 'object',
-  expected: 'object',
-  operator: 'notStrictEqual'
-}
+    ... stack trace omitted ...
 Exit code: 1
 The worker's thread Id was 1.
 ```

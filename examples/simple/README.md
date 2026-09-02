@@ -15,13 +15,13 @@ This example provides a simple demonstration of Port Peer's functionality.
 3. Use the `Peer` to await a call to the `hello_world` function.
 4. Instantiate a `Peer` in the worker thread.
 5. Use the `Peer` in order to register a function named `abend` that will throw an `Error` when it is called.
-6. Use the `Peer` in order to register a function named `hello_word` to handle calls to the `hello_world` function.
+6. Use the `Peer` in order to register a function named `hello_world` to handle calls to the `hello_world` function.
 7. Use the `Peer` in order to register a function named `add` that will return the sum of two operands.
 8. Resolve (3) and log the `greeting` to the console.
 9. Use the `Peer` to await a call to the function named `add`.
 10. Resolve (9) and log the `result` to the console.
 11. Use the `Peer` to await a call to the function named `abend`.
-12. Catch the `Error` from (11) and log the stack trace to the console.
+12. Catch the failure reason from (11) and log it to the console.
 13. Terminate the thread.
 
 ### Implement the `index.js` module
@@ -29,7 +29,7 @@ This example provides a simple demonstration of Port Peer's functionality.
 ```js
 import { Worker, isMainThread, parentPort } from "node:worker_threads";
 import { fileURLToPath } from "node:url";
-import { Peer } from "port-peer";
+import { Peer } from "@far-analytics/port-peer";
 
 if (isMainThread) {
   // This is the main thread.
@@ -91,15 +91,11 @@ npm install
 npm start
 ```
 
-##### Output
+##### Output (stack trace abbreviated)
 
 ```bash
 Hello, another world!
 2
 Error: This Error is expected, indeed.
-    at file:///port-peer/examples/simple/index.js:29:54
-    at Peer.tryPost (/port-peer/examples/simple/node_modules/port-peer/dist/index.js:145:33)
-    at MessagePort.<anonymous> (/port-peer/examples/simple/node_modules/port-peer/dist/index.js:114:36)
-    at [nodejs.internal.kHybridDispatch] (node:internal/event_target:762:20)
-    at exports.emitMessage (node:internal/per_context/messageport:23:28)
+    ... stack trace omitted ...
 ```
