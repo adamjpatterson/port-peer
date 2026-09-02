@@ -34,7 +34,7 @@ export class PortPeer {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public callableRegistrar: Map<string, (...args: any[]) => any>;
   private callID: number;
-  protected portOnline: Promise<unknown> = Promise.resolve();
+  protected portState: Promise<unknown> = Promise.resolve();
 
   constructor(port: threads.MessagePort | threads.Worker) {
     this.port = port;
@@ -46,29 +46,11 @@ export class PortPeer {
     this.callableRegistrar = new Map<string, (...args: any[]) => any>();
 
     if (port instanceof threads.Worker) {
-      this.portOnline = new Promise<void>((resolve, reject) => {
-        this.port.once("online", resolve);
-        this.port.once("error", reject);
-        this.port.once("exit", reject);
-      });
-      this.portOnline.catch(() => {});
-
-      this.port.once("error", (err: Error) => {
-        this.portOnline = Promise.reject(err);
-        void this.portOnline.catch(() => {});
-        for (const [index, call] of this.callRegistrar.entries()) {
-          this.callRegistrar.delete(index);
-          call.j(err);
-        }
-      });
-
-      this.port.once("exit", (exitCode: number) => {
-        this.portOnline = Promise.reject(exitCode);
-        void this.portOnline.catch(() => {});
-        for (const [index, call] of this.callRegistrar.entries()) {
-          this.callRegistrar.delete(index);
-          call.j(exitCode);
-        }
+      this.port.once("error", this.dispose);
+      this.port.once("exit", this.dispose);
+    } else {
+      this.port.once("close", () => {
+        this.dispose(new Error("Port closed."));
       });
     }
 
@@ -99,37 +81,44 @@ export class PortPeer {
     });
   }
 
+  private dispose = (value: number | Error): void => {
+    try {
+      this.cachedCallMessages.clear();
+      this.portState = Promise.reject(value);
+      void this.portState.catch(() => {});
+      for (const [index, call] of this.callRegistrar.entries()) {
+        this.callRegistrar.delete(index);
+        call.j(value);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   protected async tryPost(func: (...args: unknown[]) => unknown, message: CallMessage): Promise<void> {
     try {
       const value = await func(...message.args);
-      await new Promise<null>((r, j) => {
-        this.port.once("messageerror", j);
-        this.port.postMessage(new ResultMessage({ id: message.id, value, ok: true }));
-        this.port.removeListener("messageerror", j);
-        r(null);
-      });
+      this.port.postMessage(new ResultMessage({ id: message.id, value, ok: true }));
     } catch (error) {
-      await new Promise<null>((r, j) => {
-        this.port.once("messageerror", j);
-        const errorToSend = typeof error == "function" || typeof error == "symbol" ? String(error) : error;
-
-        this.port.postMessage(new ResultMessage({ id: message.id, error: errorToSend, ok: false }));
-        this.port.removeListener("messageerror", j);
-        r(null);
-      });
+      try {
+        this.port.postMessage(new ResultMessage({ id: message.id, error, ok: false }));
+      } catch (postMessageError) {
+        this.port.postMessage(new ResultMessage({ id: message.id, error: postMessageError, ok: false }));
+      }
     }
   }
 
   public async call<T>(fn: string, ...args: unknown[]): Promise<T> {
-    await this.portOnline;
-    // Each call must await here, until the port comes online, in order to ensure previous calls are processed prior to this one.
-
+    await this.portState;
     return new Promise<T>((r, j) => {
       const id = this.callID++;
       this.callRegistrar.set(id, new Call<T>({ id, fn, r, j }));
-      this.port.once("messageerror", j);
-      this.port.postMessage(new CallMessage({ id, fn, args }));
-      this.port.removeListener("messageerror", j);
+      try {
+        this.port.postMessage(new CallMessage({ id, fn, args }));
+      } catch (error) {
+        this.callRegistrar.delete(id);
+        j(error);
+      }
     });
   }
 
