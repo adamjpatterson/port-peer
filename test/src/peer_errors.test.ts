@@ -3,14 +3,13 @@ import { test, suite } from "node:test";
 import { assertTimesOut, closeTestPeer, createTestPeer } from "./helpers.js";
 
 await suite("Peer (errors)", async () => {
-  await test("marshals a synchronously thrown worker error.", async () => {
+  await test("forwards a synchronously thrown worker error.", async () => {
     const testPeer = createTestPeer();
     try {
       await assert.rejects(testPeer.peer.call("throwError"), (error: unknown) => {
         assert.ok(error instanceof Error);
         assert.strictEqual(error.message, "worker failure");
-        assert.strictEqual(error.name, "WorkerTypeError");
-        assert.strictEqual((error as Error & { code?: string }).code, "WORKER_FAILURE");
+        assert.match(error.stack ?? "", /worker failure/);
         return true;
       });
     } finally {
@@ -18,10 +17,36 @@ await suite("Peer (errors)", async () => {
     }
   });
 
-  await test("marshals a rejected worker promise.", async () => {
+  await test("forwards a rejected worker promise.", async () => {
     const testPeer = createTestPeer();
     try {
       await assert.rejects(testPeer.peer.call("rejectError"), { message: "worker rejection" });
+    } finally {
+      await closeTestPeer(testPeer);
+    }
+  });
+
+  await test("forwards cloneable non-Error rejection values.", async () => {
+    const testPeer = createTestPeer();
+    try {
+      for (const value of ["worker string rejection", false, 0, "", null, undefined]) {
+        await assert.rejects(testPeer.peer.call("rejectValue", value), (reason: unknown) => {
+          assert.strictEqual(reason, value);
+          return true;
+        });
+      }
+    } finally {
+      await closeTestPeer(testPeer);
+    }
+  });
+
+  await test("forwards a thrown string rejection value.", async () => {
+    const testPeer = createTestPeer();
+    try {
+      await assert.rejects(testPeer.peer.call("throwValue"), (reason: unknown) => {
+        assert.strictEqual(reason, "worker string throw");
+        return true;
+      });
     } finally {
       await closeTestPeer(testPeer);
     }

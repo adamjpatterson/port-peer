@@ -5,3 +5,4 @@ await import("./peer_concurrent.test.js");
 await import("./peer_lifecycle.test.js");
 await import("./peer_stress.test.js");
 await import("./peer_model.test.js");
+await import("./peer_message_port.test.js");

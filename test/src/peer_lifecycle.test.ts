@@ -39,4 +39,13 @@ await suite("Peer (lifecycle)", async () => {
       await closeTestPeer(testPeer);
     }
   });
+
+  await test("rejects a pending call when the worker crashes after startup.", async () => {
+    const testPeer = createTestPeer();
+    try {
+      await assert.rejects(testPeer.peer.call("crash"), { message: "worker crash" });
+    } finally {
+      await closeTestPeer(testPeer);
+    }
+  });
 });
