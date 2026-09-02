@@ -29,7 +29,7 @@ Port Peer provides a simple and intuitive interface that makes inter-thread func
 ## Installation
 
 ```bash
-npm install @far-analytics/port-peer --save
+npm install @far-analytics/port-peer
 ```
 
 ## Concepts
