@@ -22,6 +22,7 @@ Port Peer provides a simple and intuitive interface that makes inter-thread func
 - [Examples](#examples)
 - [API](#api)
 - [Versioning](#versioning)
+- [Tests](#tests)
 - [Notes](#notes)
 - [Support](#support)
 
@@ -115,6 +116,7 @@ Returns: `<Promise<T>>`
 - When an `Error` is marshalled, its standard error information is transferred according to the platform's structured-clone behavior. Error identity, custom prototypes, and custom properties are not guaranteed to be preserved.
 
 ###### Worker lifecycle
+
 - If a worker thread throws an unhandled exception while a call is awaited, the `Error` will be marshalled back from the _other_ thread to _this_ thread and the `Promise` will reject with the unhandled exception as its failure reason.
 - If a worker exits while a call is awaited, the `Promise` will reject with the worker's exit code as its failure reason.
 
@@ -144,6 +146,56 @@ Excerpted from [Semantic Versioning 2.0.0](https://semver.org/):
 > 3. PATCH version when you make backward compatible bug fixes
 >
 > Additional labels for pre-release and build metadata are available as extensions to the MAJOR.MINOR.PATCH format.
+
+## Tests
+
+### How to run the test suite
+
+#### Clone the repository.
+
+```bash
+git clone https://github.com/adamjpatterson/port-peer
+```
+
+#### Change directory into the root of the repository.
+
+```bash
+cd port-peer
+```
+
+#### Install Port Peer dependencies.
+
+```bash
+npm install
+```
+
+#### Run the tests.
+
+```bash
+npm test
+```
+
+#### Run linting and tests together.
+
+```bash
+npm run check
+```
+
+#### Run the optional peer soak test.
+
+The normal test suite includes deterministic concurrency and registration tests. A longer peer soak test is available but skipped by default.
+
+On POSIX shells:
+
+```bash
+PORT_PEER_SOAK=1 npm test
+```
+
+On PowerShell:
+
+```powershell
+$env:PORT_PEER_SOAK = "1"; npm test
+```
 
 ## Notes
 
