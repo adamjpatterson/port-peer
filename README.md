@@ -1,6 +1,6 @@
 # Port Peer
 
-A RPC-like facility for making inter-thread function calls.
+An RPC-like facility for making inter-thread function calls.
 
 ## Introduction
 
@@ -11,8 +11,8 @@ Port Peer provides a simple and intuitive interface that makes inter-thread func
 - Bi-directional inter-thread function calls.
 - Port Peer will marshal the return value or failure reason from the _other_ thread back to the caller.
 - The _other_ thread may be the main thread or a worker thread.
-- Registered functions (i.e., `peer.register`) persist until deregistered (i.e., `peer.deregister`) .
-- Late binding registrants will be called with previously awaited invocations.
+- Registered functions (i.e., `peer.register`) persist until deregistered (i.e., `peer.deregister`).
+- Late binding registrants will be called with previously requested calls.
 
 ## Table of contents
 
@@ -38,7 +38,7 @@ npm install @far-analytics/port-peer --save
 
 An instance of a `Peer` facilitates bi-directional communication between threads. The `Peer` can be used in order to register a function in one thread and call it from another thread. Calls may be made from the main thread to a worker thread, and conversely from a worker thread to the main thread.
 
-Late binding registrants will be called with previously awaited invocations; thus preventing a race condition. This means that you may await a call to a function that has not yet been registered. Once the function is registered in the _other_ thread it will be called and its return value or failure reason will be marshalled back to the caller.
+Late binding registrants will be called with previously requested calls; thus preventing a race condition. This means that you may await a call to a function that has not yet been registered. Once the function is registered in the _other_ thread it will be called and its return value or failure reason will be marshalled back to the caller.
 
 Please see the [Examples](#examples) for variations on the `Peer`'s usage.
 
@@ -118,8 +118,8 @@ Returns: `<Promise<T>>`
 
 ###### Worker lifecycle
 
-- If a worker thread throws an unhandled exception while a call is awaited, the `Promise` will reject with the worker error.
-- If a worker exits while a call is awaited, the `Promise` will reject with the worker's exit code as its failure reason.
+- If a worker thread throws an unhandled exception, all pending `Promise`s will reject with the worker error.
+- If a worker exits, all pending `Promise`s will reject with the worker's exit code as their failure reason.
 
 ###### MessagePort lifecycle
 
@@ -205,7 +205,7 @@ $env:PORT_PEER_SOAK = "1"; npm test
 
 ## Notes
 
-### Support for broadcastChannels
+### Support for `BroadcastChannel`
 
 Port Peer supports one to one communication over a `MessagePort`. `BroadcastChannel`s are not presently supported.
 
