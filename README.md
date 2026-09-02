@@ -108,11 +108,15 @@ _public_ **peer.call\<T\>(name, ...args)**
 
 Returns: `<Promise<T>>`
 
-Errors:
+##### Errors
 
-- If the registered function in the _other_ thread throws an `Error`, the `Error` will be marshalled back from the _other_ thread to _this_ thread and the `Promise` will reject with the `Error` as its failure reason.
+- If the registered function in the _other_ thread throws or rejects, the failure reason will be marshalled back from the _other_ thread to _this_ thread and the `Promise` will reject with that value as its failure reason.
+- Rejection reasons may be any value supported by the underlying `MessagePort` structured-clone operation, including `Error` objects, strings, numbers, `false`, `null`, and `undefined`. Callers should not assume that a rejection reason is an `Error`.
+- When an `Error` is marshalled, its standard error information is transferred according to the platform's structured-clone behavior. Error identity, custom prototypes, and custom properties are not guaranteed to be preserved.
+
+###### Worker lifecycle
 - If a worker thread throws an unhandled exception while a call is awaited, the `Error` will be marshalled back from the _other_ thread to _this_ thread and the `Promise` will reject with the unhandled exception as its failure reason.
-- If a worker exits while a call is awaited, the `Error` will be marshalled back from the _other_ thread to _this_ thread and the `Promise` will reject with the exit code as its failure reason.
+- If a worker exits while a call is awaited, the `Promise` will reject with the worker's exit code as its failure reason.
 
 _public_ **peer.register(name, fn)**
 
