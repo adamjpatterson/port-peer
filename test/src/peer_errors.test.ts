@@ -52,6 +52,15 @@ await suite("Peer (errors)", async () => {
     }
   });
 
+  await test("forwards the postMessage error when a rejection value cannot be cloned.", async () => {
+    const testPeer = createTestPeer();
+    try {
+      await assert.rejects(testPeer.peer.call("rejectUncloneable"), { name: "DataCloneError" });
+    } finally {
+      await closeTestPeer(testPeer);
+    }
+  });
+
   await test("rejects calls containing values that cannot be cloned.", async () => {
     const testPeer = createTestPeer();
     try {
@@ -61,6 +70,7 @@ await suite("Peer (errors)", async () => {
           name: "DataCloneError",
         }
       );
+      assert.strictEqual(testPeer.peer.callRegistrar.size, 0);
     } finally {
       await closeTestPeer(testPeer);
     }

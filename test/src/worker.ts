@@ -17,6 +17,7 @@ peer.register("throwError", (): never => {
 });
 peer.register("rejectError", (): Promise<never> => Promise.reject(new Error("worker rejection")));
 peer.register("rejectValue", (value: unknown): Promise<never> => Promise.reject(value));
+peer.register("rejectUncloneable", (): Promise<never> => Promise.reject((): string => "not cloneable"));
 peer.register("throwValue", (): never => {
   throw "worker string throw";
 });
