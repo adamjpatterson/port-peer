@@ -12,7 +12,7 @@ Port Peer provides a simple and intuitive interface that makes inter-thread func
 - Port Peer will marshal the return value or failure reason from the _other_ thread back to the caller.
 - The _other_ thread may be the main thread or a worker thread.
 - Registered functions (i.e., `peer.register`) persist until deregistered (i.e., `peer.deregister`).
-- Late binding registrants will be called with previously requested calls.
+- Late binding registrants will be called with previously awaited invocations.
 
 ## Table of contents
 
@@ -38,7 +38,7 @@ npm install @far-analytics/port-peer
 
 An instance of a `Peer` facilitates bi-directional communication between threads. The `Peer` can be used in order to register a function in one thread and call it from another thread. Calls may be made from the main thread to a worker thread, and conversely from a worker thread to the main thread.
 
-Late binding registrants will be called with previously requested calls; thus preventing a race condition. This means that you may await a call to a function that has not yet been registered. Once the function is registered in the _other_ thread it will be called and its return value or failure reason will be marshalled back to the caller.
+Late binding registrants will be called with previously awaited invocations; thus preventing a race condition. This means that you may await a call to a function that has not yet been registered. Once the function is registered in the _other_ thread it will be called and its return value or failure reason will be marshalled back to the caller.
 
 Please see the [Examples](#examples) for variations on the `Peer`'s usage.
 
