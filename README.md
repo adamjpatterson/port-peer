@@ -46,7 +46,7 @@ Please see the [Examples](#examples) for variations on the `Peer`'s usage.
 
 ### How to create a Peer instance
 
-#### Import the Peer class and relevant dependencies.
+Import the Peer class and relevant dependencies.
 
 ```ts
 import { Worker, parentPort } from "node:worker_threads";
@@ -54,7 +54,7 @@ import { fileURLToPath } from "node:url";
 import { Peer } from "@far-analytics/port-peer";
 ```
 
-#### You can create a new Peer by passing a MessagePort or Worker instance to the Peer constructor.
+You can create a new Peer by passing a MessagePort or Worker instance to the Peer constructor.
 
 In the main thread,
 
@@ -71,13 +71,13 @@ const peer = new Peer(parentPort);
 
 ### How to use a Peer instance
 
-#### You can register a function in the main thread or in a worker thread using the `peer.register` method.
+You can register a function in the main thread or in a worker thread using the `peer.register` method.
 
 ```ts
 peer.register("hello_world", (value: string): string => `Hello, ${value} world!`);
 ```
 
-#### You can call a function registered in another thread (i.e., the main thread or a worker thread) using the `peer.call` method:
+You can call a function registered in another thread (i.e., the main thread or a worker thread) using the `peer.call` method:
 
 ```ts
 const greeting = await peer.call<string>("hello_world", "happy");
