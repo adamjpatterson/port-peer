@@ -1,6 +1,6 @@
 {
   "name": "@far-analytics/port-peer",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "A RPC-like facility for making inter-thread function calls.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
